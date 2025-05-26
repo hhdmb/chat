@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatBot MyCloudLife</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #e0f0ff, #f8fbff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 450px;
+      height: 90vh;
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 60, 120, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      text-align: center;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+    .message {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      animation: fadeIn 0.4s ease;
+    }
+    .bot {
+      background-color: #e5f1ff;
+      align-self: flex-start;
+    }
+    .user {
+      background-color: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .option-button {
+      background-color: #f0f7ff;
+      color: #007bff;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 18px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .option-button:hover {
+      background-color: #d6e9ff;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">💬 MyCloudLife Assistant</div>
+    <div class="chat-box" id="chat-box">
+      <div class="message bot">Bonjour ! Sur quel sujet avez-vous une question ?</div>
+    </div>
+  </div>
+  <script>
+    const chatBox = document.getElementById('chat-box');
+
+    const questions = {
+      "Abonnement": [
+        ["Comment voir mon abonnement actuel ?", "Rendez-vous dans l'onglet 'Mon abonnement' pour consulter vos offres actives et la date d’expiration."],
+        ["Comment changer d’offre ?", "Achetez une nouvelle offre dans 'Nos Offres'. Vous continuerez à payer les anciennes offres sauf si vous les résiliez."],
+        ["Quand expire mon abonnement ?", "Consultez l'onglet 'Mon abonnement', un compte à rebours y affiche les jours restants."],
+        ["Que se passe-t-il si je ne renouvelle pas ?", "Votre galerie est bloquée pendant 15-20 jours. Passé ce délai, vos données seront supprimées si aucun paiement n’est fait."]
+      ],
+      "Paiement": [
+        ["J’ai payé, mais rien n’a été activé.", "Patientez 24h. Passé ce délai, contactez-nous via notre boîte mail."],
+        ["Quels moyens de paiement acceptez-vous ?", "Wave, Orange Money, Moov Money et MTN Money sont acceptés."],
+        ["J’ai payé deux fois, que faire ?", "Vous recevrez deux fois la même offre. Les paiements sont cumulables."],
+        ["Est-ce que le paiement est sécurisé ?", "Oui, tous les paiements sont traités via la plateforme sécurisée CinetPay."]
+      ],
+      "Utilisation": [
+        ["Je ne comprends pas comment utiliser MyCloudLife.", "L’application sert à stocker les fichiers de votre galerie pour libérer de l’espace, comme une carte mémoire virtuelle."],
+        ["Comment envoyer un fichier ?", "Rendez-vous dans l’onglet 'Stockage', suivez les instructions pour ajouter un fichier."],
+        ["Comment partager un fichier ?", "Appuyez sur le fichier puis cliquez sur 'Partager' pour l’envoyer via vos réseaux. Ce n’est pas un lien, mais le fichier lui-même."],
+        ["Mon stockage est plein, que faire ?", "Vous pouvez acheter une nouvelle offre dans la rubrique 'Nos Offres'."]
+      ],
+      "Offres": [
+        ["Quelle est l’offre la moins chère ?", "Celle de 1500 FCFA offre 15 Go de stockage."],
+        ["Y a-t-il une offre de 60 Go ?", "Non, mais vous pouvez prendre 2 offres de 30 Go pour l’équivalent."],
+        ["Quelle offre recommandez-vous ?", "Si vous êtes un grand stockeur : 50 ou 100 Go. Sinon, 15 Go suffit pour un usage simple."],
+        ["Y a-t-il un bonus après paiement ?", "Oui, un bonus est accordé à chaque paiement mensuel. Consultez la rubrique 'Nos Offres'."]
+      ],
+      "Problèmes techniques": [
+        ["Mon espace ne s’est pas mis à jour.", "Patientez 24h. Si rien ne change, contactez-nous par mail."],
+        ["Je ne reçois pas les notifications.", "Activez les notifications dans les paramètres de votre appareil."],
+        ["L’interface est lente.", "Vérifiez votre connexion mobile, Wi-Fi ou réseau."],
+        ["Je ne peux pas me connecter.", "Vérifiez votre connexion, vos identifiants ou cliquez sur 'Mot de passe oublié'."]
+      ]
+    };
+
+    let step = 0;
+    let currentCategory = null;
+
+    const addMessage = (text, sender = 'bot') => {
+      const div = document.createElement('div');
+      div.className = `message ${sender}`;
+      div.innerText = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
+    const addOptions = (options, callback) => {
+      const container = document.createElement('div');
+      container.className = 'options';
+      options.forEach(option => {
+        const btn = document.createElement('button');
+        btn.className = 'option-button';
+        btn.innerText = option;
+        btn.onclick = () => {
+          addMessage(option, 'user');
+          container.remove();
+          setTimeout(() => callback(option), 400);
+        };
+        container.appendChild(btn);
+      });
+      chatBox.appendChild(container);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
+    const askQuestion = () => {
+      addOptions(Object.keys(questions), (selected) => {
+        currentCategory = selected;
+        addMessage("Merci. Voici les questions possibles :");
+        addOptions(questions[selected].map(q => q[0]), (q) => {
+          const answer = questions[currentCategory].find(item => item[0] === q)[1];
+          addMessage(answer);
+          setTimeout(() => {
+            addMessage("Souhaitez-vous poser une question sur un autre sujet ?");
+            addOptions(["Oui", "Non"], (rep) => {
+              if (rep === "Oui") askQuestion();
+              else addMessage("Merci pour votre visite sur MyCloudLife !");
+            });
+          }, 1000);
+        });
+      });
+    };
+
+    askQuestion();
+  </script>
+</body>
+</html>
